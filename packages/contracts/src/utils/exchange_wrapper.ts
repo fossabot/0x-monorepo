@@ -9,7 +9,7 @@ import { constants } from './constants';
 import { formatters } from './formatters';
 import { LogDecoder } from './log_decoder';
 import { orderUtils } from './order_utils';
-import { SignedOrder } from './types';
+import { SignedOrder, SignedTransaction } from './types';
 
 export class ExchangeWrapper {
     private _exchange: ExchangeContract;
@@ -162,6 +162,20 @@ export class ExchangeWrapper {
         const txHash = await this._exchange.batchCancelOrders.sendTransactionAsync(
             params.orders,
             params.takerTokenCancelAmounts,
+            { from },
+        );
+        const tx = await this._getTxWithDecodedExchangeLogsAsync(txHash);
+        return tx;
+    }
+    public async executeTransactionAsync(
+        signedTx: SignedTransaction,
+        from: string,
+    ): Promise<TransactionReceiptWithDecodedLogs> {
+        const txHash = await this._exchange.executeTransaction.sendTransactionAsync(
+            signedTx.salt,
+            signedTx.signer,
+            signedTx.data,
+            signedTx.signature,
             { from },
         );
         const tx = await this._getTxWithDecodedExchangeLogsAsync(txHash);
